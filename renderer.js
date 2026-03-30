@@ -220,7 +220,7 @@ const toggleInputs = {
   },
 
   claudeToggle: async (webview) => {
-webview.executeJavaScript(`
+    webview.executeJavaScript(`
 (() => {
   const el = document.querySelector('[data-hidden-by-script="true"]');
   if (el) {
@@ -380,44 +380,8 @@ const WebviewReadyHandlers = {
 
   claudeReady: async (webview) => {
     await waitForDomReady(webview);
-    webview.openDevTools();
+    // webview.openDevTools();
     webview.executeJavaScript(`
-      //  data-testid="chat-input-grid-container"
-        // (() => {
-        //   // const container = document.querySelector('[data-chat-input-container]');
-        //   const container = document.querySelector('[data-testid="chat-input-grid-container"]');
-        //   if (!container) return console.log("Container not found");
-
-        //   container.style.display = "none";
-        //   console.log("Container hidden");
-        // })();
-
-//         (() => {
-//   const container = document.querySelector('[data-testid="chat-input-grid-container"]');
-//   if (!container) return;
-
-//   container.style.opacity = "0";
-//   container.style.pointerEvents = "none";
-// })();
-
-
-// (() => {
-//   if (document.getElementById("hide-chat-style")) return;
-// 
-//   const style = document.createElement("style");
-//   style.id = "hide-chat-style";
-//   style.textContent = \`
-//     [data-testid="chat-input-grid-container"] {
-//       opacity: 0 !important;
-//       pointer-events: none !important;
-//     }
-//   \`;
-// 
-//   document.head.appendChild(style);
-//   console.log("Persistent hide applied");
-// })();
-
-
 (() => {
   const el = document
     .querySelector('[data-testid="chat-input"]')
@@ -429,8 +393,6 @@ const WebviewReadyHandlers = {
     el.style.left = '-9999px';
   }
 })();
-
-
 
     `);
   },
@@ -1190,7 +1152,8 @@ document.addEventListener('DOMContentLoaded', () => {
     startX: 0,
     startY: 0,
     offsetX: 0,
-    offsetY: 0
+    offsetY: 0,
+    originalOrder: {}  // Track visual order with CSS order property
   };
 
 
@@ -1274,8 +1237,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         * {
-            scrollbar-width: thin !important;
-            scrollbar-color: rgba(0,0,0,0.5) transparent !important;
+            scrollbar-width: 2px !important;
+            scrollbar-color: #ae61ed !important;
         }
     `;
 
@@ -1402,12 +1365,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (true) {
       const dragger = createDragger();
+      const draggerOrder = webviews.length * 2 - 1;  // Draggers have .5 order values
+      dragger.style.order = draggerOrder;
       container.appendChild(dragger);
     }
 
-
-
-
+    // Set initial order for this wrapper
+    wrapper.style.order = webviews.length * 2;  // Wrappers: 0, 2, 4, 6, etc.
     container.appendChild(wrapper);
 
     // 🔥 ADD THIS - Push to webviews array
@@ -1455,10 +1419,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // selectOption("grok");
   // selectOption("deepseek");c
 
-
-
   updateWebviewWidths();
-
 
 
   function startReorderDrag(e, wrapper) {
@@ -1467,19 +1428,12 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Debug logs
-    console.log('Webviews array length:', webviews.length);
-    console.log('Looking for wrapper with id:', wrapper.dataset.id);
-
     const index = webviews.findIndex(w => w.element === wrapper);
 
     if (index === -1) {
       console.error('ERROR: Wrapper not found in webviews array!');
-      console.log('Available webview IDs:', webviews.map(w => w.id));
       return;
     }
-
-    console.log('Found at index:', index);
 
     reorderState.isDragging = true;
     reorderState.draggedElement = wrapper;
@@ -1492,21 +1446,14 @@ document.addEventListener('DOMContentLoaded', () => {
     reorderState.startX = e.clientX;
     reorderState.startY = e.clientY;
 
-    console.log('Rect:', rect);
+    // Save current CSS order values for all wrappers
+    reorderState.originalOrder = {};
+    webviews.forEach((wv, idx) => {
+      reorderState.originalOrder[wv.id] = parseInt(window.getComputedStyle(wv.element).order) || idx;
+      wv.element.style.order = idx;  // Ensure explicit order
+    });
 
-    // Save current widths
-    saveWebviewWidths();
-
-    // Create placeholder
-    reorderState.placeholder = document.createElement('div');
-    reorderState.placeholder.className = 'webview-placeholder';
-    reorderState.placeholder.style.width = rect.width + 'px';
-    reorderState.placeholder.style.height = rect.height + 'px';
-
-    // Insert placeholder
-    wrapper.parentNode.insertBefore(reorderState.placeholder, wrapper);
-
-    // Make wrapper draggable
+    // Make wrapper draggable with fixed positioning (visual only)
     wrapper.classList.add('dragging-webview');
     wrapper.style.width = rect.width + 'px';
     wrapper.style.height = rect.height + 'px';
@@ -1527,7 +1474,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dragHandle.addEventListener('pointerup', onReorderDragEnd);
     dragHandle.addEventListener('pointercancel', onReorderDragEnd);
 
-    console.log('Started reordering webview - all listeners attached');
+    console.log('Started reordering webview - visual order will update via CSS order property');
   }
   function onReorderDrag(e) {
     if (!reorderState.isDragging) return;
@@ -1537,27 +1484,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const wrapper = reorderState.draggedElement;
 
-    // Move the dragged element
+    // Move the visual representation (fixed element)
     wrapper.style.left = (e.clientX - reorderState.offsetX) + 'px';
     wrapper.style.top = (e.clientY - reorderState.offsetY) + 'px';
 
-    // Find where to insert based on mouse position
-    const afterElement = getDragAfterElement(e.clientX);
+    // Find which wrapper the dragged item should swap with based on mouse position
+    const draggedCenterX = e.clientX;
 
-    if (afterElement == null) {
-      // Append to end
-      const lastDragger = Array.from(container.children)
-        .filter(el => el.classList.contains('dragger'))
-        .pop();
+    webviews.forEach((wv, index) => {
+      if (wv.element === wrapper) return;
 
-      if (lastDragger) {
-        container.insertBefore(reorderState.placeholder, lastDragger.nextSibling);
-      } else {
-        container.appendChild(reorderState.placeholder);
+      const box = wv.element.getBoundingClientRect();
+      const centerX = box.left + box.width / 2;
+
+      // If dragged item's center is beyond this wrapper's center, swap order
+      if (draggedCenterX > centerX && reorderState.draggedIndex < index) {
+        // Swap: move dragged earlier, move this one back
+        wv.element.style.order = reorderState.draggedIndex;
+        wrapper.style.order = index;
+        reorderState.draggedIndex = index;
+      } else if (draggedCenterX < centerX && reorderState.draggedIndex > index) {
+        // Swap: move dragged later, move this one forward
+        wv.element.style.order = reorderState.draggedIndex;
+        wrapper.style.order = index;
+        reorderState.draggedIndex = index;
       }
-    } else {
-      container.insertBefore(reorderState.placeholder, afterElement);
-    }
+    });
   }
 
   function onReorderDragEnd(e) {
@@ -1567,21 +1519,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const wrapper = reorderState.draggedElement;
     const dragHandle = e.target;
-
-    // Remove dragging styles
-    wrapper.classList.remove('dragging-webview');
-    wrapper.style.width = '';
-    wrapper.style.height = '';
-    wrapper.style.left = '';
-    wrapper.style.top = '';
-    wrapper.style.position = '';
-    wrapper.style.zIndex = '';
-
-    // Insert at placeholder position
-    if (reorderState.placeholder && reorderState.placeholder.parentNode) {
-      reorderState.placeholder.parentNode.insertBefore(wrapper, reorderState.placeholder);
-      reorderState.placeholder.remove();
-    }
 
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
@@ -1596,57 +1533,45 @@ document.addEventListener('DOMContentLoaded', () => {
     dragHandle.removeEventListener('pointerup', onReorderDragEnd);
     dragHandle.removeEventListener('pointercancel', onReorderDragEnd);
 
-    // Rebuild webviews array and draggers while preserving widths
-    rebuildWebviewsArray();
+    // Clear visual dragging styles
+    requestAnimationFrame(() => {
+      wrapper.classList.remove('dragging-webview');
+      wrapper.style.width = '';
+      wrapper.style.height = '';
+      wrapper.style.left = '';
+      wrapper.style.top = '';
+      wrapper.style.position = '';
+      wrapper.style.zIndex = '';
 
-    // Restore the saved widths
-    restoreWebviewWidths();
+      // Update webviews array order based on current CSS order values
+      const orderedWebviews = [...webviews].sort((a, b) => {
+        const orderA = parseInt(window.getComputedStyle(a.element).order) || webviews.indexOf(a);
+        const orderB = parseInt(window.getComputedStyle(b.element).order) || webviews.indexOf(b);
+        return orderA - orderB;
+      });
+
+      webviews = orderedWebviews;
+
+      // Rebuild draggers to match new order
+      rebuildDraggers();
+
+      // Restore widths
+      restoreWebviewWidths();
+    });
 
     reorderState.isDragging = false;
     reorderState.draggedElement = null;
     reorderState.draggedIndex = -1;
     reorderState.placeholder = null;
     reorderState.pointerId = undefined;
+    reorderState.originalOrder = {};
 
     console.log('Finished reordering webview');
   }
 
-  function getDragAfterElement(x) {
-    const draggableElements = Array.from(container.children)
-      .filter(child =>
-        child.classList.contains('webview-wrapper') &&
-        !child.classList.contains('dragging-webview')
-      );
 
-    // If no elements, return null (will append to end)
-    if (draggableElements.length === 0) return null;
-
-    // Find the element whose center is closest to the cursor
-    let insertBefore = null;
-
-    for (const child of draggableElements) {
-      const box = child.getBoundingClientRect();
-      const centerX = box.left + box.width / 2;
-
-      // If cursor is to the left of this element's center
-      if (x < centerX) {
-        insertBefore = child;
-        break;
-      }
-    }
-
-    return insertBefore; // null means append to end
-  }
 
   // Save current widths before reordering
-  function saveWebviewWidths() {
-    webviews.forEach(({ element, id }) => {
-      const currentWidth = element.offsetWidth;
-      element.dataset.savedWidth = currentWidth + 'px';
-    });
-    console.log('Saved webview widths');
-  }
-
   // Restore widths after reordering
   function restoreWebviewWidths() {
     webviews.forEach(({ element }) => {
@@ -1658,40 +1583,26 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Restored webview widths');
   }
 
-  function rebuildWebviewsArray() {
-    // Rebuild webviews array based on current DOM order
-    const newWebviews = [];
-    const wrappers = Array.from(container.children)
-      .filter(child => child.classList.contains('webview-wrapper'));
-
-    wrappers.forEach(wrapper => {
-      const id = wrapper.dataset.id;
-      const existing = webviews.find(w => w.id === id);
-      if (existing) {
-        newWebviews.push(existing);
-      }
-    });
-
-    webviews = newWebviews;
-
-    // Rebuild draggers
-    rebuildDraggers();
-
-    console.log('Webviews reordered:', webviews.map(w => w.url));
-  }
-
   function rebuildDraggers() {
     // Remove all existing draggers
     const existingDraggers = container.querySelectorAll('.dragger');
     existingDraggers.forEach(d => d.remove());
 
-    // Add draggers between webviews
-    const wrappers = Array.from(container.children)
-      .filter(child => child.classList.contains('webview-wrapper'));
+    // Get wrappers sorted by their CSS order property
+    const sortedWrappers = Array.from(container.children)
+      .filter(child => child.classList.contains('webview-wrapper'))
+      .sort((a, b) => {
+        const orderA = parseInt(window.getComputedStyle(a).order) || 0;
+        const orderB = parseInt(window.getComputedStyle(b).order) || 0;
+        return orderA - orderB;
+      });
 
-    for (let i = 1; i < wrappers.length; i++) {
+    // Insert draggers between wrappers, each with an explicit order value
+    for (let i = 0; i < sortedWrappers.length - 1; i++) {
       const dragger = createDragger();
-      container.insertBefore(dragger, wrappers[i]);
+      const orderValue = i + 0.5;  // Draggers go between integers: 0.5, 1.5, 2.5, etc.
+      dragger.style.order = orderValue;
+      sortedWrappers[i].insertAdjacentElement('afterend', dragger);
     }
   }
 
@@ -1827,10 +1738,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (count === 0) return;
 
-    // Reset all custom widths first
-    webviews.forEach(({ element }) => {
+    // Reset all custom widths first and initialize order if not set
+    webviews.forEach(({ element }, index) => {
       element.style.width = '';
       element.style.flexShrink = '';
+
+      // Initialize order if not already set
+      if (!element.style.order) {
+        element.style.order = index * 2;  // Wrappers: 0, 2, 4, 6, etc.
+      }
     });
 
     let width;

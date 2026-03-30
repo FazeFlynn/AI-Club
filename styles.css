@@ -45,7 +45,7 @@ body {
     background: #1a7fd4;
 }
 
-.container {
+#container {
     display: flex;
     height: 100vh;
     /* Subtract controls height */
