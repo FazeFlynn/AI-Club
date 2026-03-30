@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Injection Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        h1 {
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .content-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        #toInjectJS {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border: 3px dashed #667eea;
+            min-height: 100px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        
+        .info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #ffd700;
+        }
+        
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .original-content {
+            font-style: italic;
+            color: #764ba2;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 JavaScript Injection Test Page</h1>
+    
+    <div class="content-box">
+        <h2>Welcome to the Test Page!</h2>
+        <p>This page is designed to test the JavaScript injection feature of the Split Browser Electron app.</p>
+    </div>
+    
+    <div class="content-box">
+        <h3>📍 Injection Target Zone</h3>
+        <p>The box below has <code>id="toInjectJS"</code> and is the target for injection:</p>
+    </div>
+    
+    <div id="toInjectJS">
+        <p class="original-content">
+            ⬇️ This is the ORIGINAL content inside the #toInjectJS div. ⬇️
+        </p>
+        <p>
+            When you inject HTML from the Electron app, this entire content will be replaced 
+            with whatever you specify in the injection textarea.
+        </p>
+        <p style="margin-top: 15px; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+            <strong>Try injecting something like:</strong><br>
+            <code>&lt;h2 style="color: green;"&gt;✅ Injection Successful!&lt;/h2&gt;</code>
+        </p>
+    </div>
+    
+    <div class="content-box">
+        <h3>ℹ️ How to Use</h3>
+        <ol>
+            <li>Load this page in the Split Browser app (use <code>file:///path/to/test-injection.html</code>)</li>
+            <li>Enter your HTML/JavaScript in the injection textarea</li>
+            <li>Click "Inject Left", "Inject Right", or "Inject Both"</li>
+            <li>Watch as the content in the bordered box above changes!</li>
+        </ol>
+    </div>
+    
+    <div class="info">
+        <strong>💡 Tip:</strong> You can inject any HTML, including:
+        <ul>
+            <li>Text with inline styles</li>
+            <li>Images with <code>&lt;img&gt;</code> tags</li>
+            <li>Buttons with <code>onclick</code> handlers</li>
+            <li>Interactive forms</li>
+            <li>Embedded videos</li>
+        </ul>
+    </div>
+    
+    <div class="content-box">
+        <h3>🎨 Example Injections to Try</h3>
+        
+        <p><strong>Simple Text:</strong></p>
+        <code>&lt;p style="color: red; font-size: 24px;"&gt;Hello from Injection!&lt;/p&gt;</code>
+        
+        <p style="margin-top: 15px;"><strong>Interactive Button:</strong></p>
+        <code>&lt;button onclick="alert('Clicked!')" style="padding: 10px 20px; font-size: 16px; cursor: pointer;"&gt;Click Me!&lt;/button&gt;</code>
+        
+        <p style="margin-top: 15px;"><strong>Image:</strong></p>
+        <code>&lt;img src="https://via.placeholder.com/300x200/667eea/ffffff?text=Injected+Image" alt="Injected"&gt;</code>
+        
+        <p style="margin-top: 15px;"><strong>Styled Card:</strong></p>
+        <code>&lt;div style="background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 10px; color: white;"&gt;&lt;h3&gt;Injected Card&lt;/h3&gt;&lt;p&gt;This is a beautiful card!&lt;/p&gt;&lt;/div&gt;</code>
+    </div>
+    
+    <div class="content-box" style="text-align: center; margin-top: 40px;">
+        <p>Made with ❤️ for testing the Split Browser app</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "AIL",
+  "version": "1.0.0",
+  "description": "AIL",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --enable-logging"
+  },
+  "keywords": [
+    "electron",
+    "webview",
+    "browser"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^40.7.0"
+  }
+}
