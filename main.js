@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const { app, BrowserWindow, ipcMain, session, shell } = require('electron');
 const path = require('path');
 const { login } = require("./auth/authService");
@@ -47,16 +49,14 @@ function createWindow() {
         width: 1400,
         height: 900,
         webPreferences: {
-            nodeIntegration: true,
-            // contextIsolation: false,
+            nodeIntegration: false,  // ✅ Disable for security
+            contextIsolation: true,   // ✅ Enable for security
             webviewTag: true,
             allowRunningInsecureContent: false,
             webSecurity: true,
-            // preload: path.join(__dirname, 'preload.js'),
-            preload: path.join(__dirname, 'auth-preload.js'),
-            contextIsolation: false   // IMPORTANT
+            preload: path.join(__dirname, 'preload.js'),  // ✅ Use proper preload with contextBridge
         },
-        icon: path.join(__dirname, 'icon.png'),
+        // icon: path.join(__dirname, 'icon.png'),  // ✅ Icon file not available, commented out
         autoHideMenuBar: true
     });
 
@@ -82,10 +82,17 @@ function createWindow() {
     });
 }
 
-// main.js - add this before app.whenReady()
-app.commandLine.appendSwitch('ignore-certificate-errors');
-app.commandLine.appendSwitch('ignore-ssl-errors');
-app.commandLine.appendSwitch('ignore-certificate-errors-spki-list');
+// ✅ IMPORTANT: These MUST be called before app.whenReady()
+// Only append switches if app is defined (should be available when Electron loads this file)
+if (app) {
+    try {
+        app.commandLine.appendSwitch('ignore-certificate-errors');
+        app.commandLine.appendSwitch('ignore-ssl-errors');
+        app.commandLine.appendSwitch('ignore-certificate-errors-spki-list');
+    } catch (err) {
+        console.warn('[MAIN] Could not set CLI switches:', err.message);
+    }
+}
 
 app.whenReady().then(() => {
 
@@ -143,6 +150,18 @@ ipcMain.handle("start-oauth", async (event, siteName, provider) => {
 // Keep the IPC handler too as a fallback
 ipcMain.handle('setup-session', (event, tabId) => {
     setupSession(tabId);
+});
+
+// Handle token injection request from renderer
+ipcMain.handle('inject-oauth-tokens', (event, { siteName, tokens }) => {
+    try {
+        // Find the webview for this site and send the tokens
+        mainWindow.webContents.send('oauth-inject-tokens', { siteName, tokens });
+        return { success: true };
+    } catch (error) {
+        console.error('[OAuth] Token injection error:', error);
+        return { success: false, error: error.message };
+    }
 });
 
 
@@ -243,7 +262,7 @@ ipcMain.handle('open-google-auth', (event, tabId) => {
                 sendMessage: ()=>{},
                 onMessage: { addListener: ()=>{}, removeListener: ()=>{} },
             };
-        `).catch(() => {});
+        `).catch(() => { });
     });
 
     authWindow.webContents.on('did-navigate', (e, url) => {

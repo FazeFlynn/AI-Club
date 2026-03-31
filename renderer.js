@@ -8,21 +8,63 @@ body {
 }
 `;
 
-const { ipcRenderer } = require("electron");
+// ✅ Use the authAPI exposed by preload.js (works with contextIsolation: true)
+// Note: window.authAPI is exposed by preload.js, don't destructure it upfront
 
-// const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-const UA = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36`;
+// User-Agent string built from Electron's Chrome version (exposed via preload)
+const UA = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${window.electronVersions?.chrome || '120.0.0.0'} Safari/537.36`;
 
-ipcRenderer.on("oauth-complete", (event, siteName) => {
-
-  if (siteName === "siteA") {
-    siteA.reload();
+// Wait for the page to be fully loaded before setting up OAuth listeners
+document.addEventListener('DOMContentLoaded', () => {
+  if (!window.authAPI) {
+    console.error('[OAuth-Renderer] authAPI not available from preload');
+    return;
   }
 
-  if (siteName === "siteB") {
-    siteB.reload();
-  }
+  // Setup OAuth event listeners via preload
+  window.authAPI.onOAuthComplete((siteName) => {
+    console.log(`[OAuth-Renderer] OAuth complete for: ${siteName}`);
 
+    const webview = document.getElementById(siteName);
+    if (webview) {
+      console.log(`[OAuth-Renderer] Reloading webview for: ${siteName}`);
+      webview.reload();
+    }
+  });
+
+  // Listen for OAuth tokens
+  window.authAPI.onOAuthTokensReceived(({ siteName, provider, tokens }) => {
+    console.log(`[OAuth-Renderer] Received tokens for ${siteName}`);
+
+    const webview = document.getElementById(siteName);
+    if (!webview) {
+      console.error(`[OAuth-Renderer] Webview not found for ${siteName}`);
+      return;
+    }
+
+    // Store tokens in localStorage for the webview's partition
+    webview.executeJavaScript(`
+            localStorage.setItem('oauth_tokens', JSON.stringify(${JSON.stringify(tokens)}));
+            localStorage.setItem('oauth_authenticated', 'true');
+            localStorage.setItem('oauth_timestamp', Date.now());
+            console.log('[OAuth] Tokens injected into webview for ${siteName}');
+        `);
+  });
+
+  // Listen for OAuth errors
+  window.authAPI.onOAuthError(({ error }) => {
+    console.error('[OAuth-Renderer] OAuth error:', error);
+    alert(`OAuth login failed: ${error}`);
+  });
+
+  // Listen for auth-complete (from the BrowserWindow Google login approach)
+  window.authAPI.onAuthComplete((tabId) => {
+    console.log(`[OAuth-Renderer] Auth complete for tab: ${tabId}`);
+    const webview = document.getElementById(tabId);
+    if (webview) {
+      webview.reload();
+    }
+  });
 });
 
 function attachOAuthInterceptor(webview, siteId) {
@@ -1304,41 +1346,44 @@ document.addEventListener('DOMContentLoaded', () => {
     // --------------
 
 
-    // renderer.js - intercept Google login redirects in webviews
+    // renderer.js - intercept OAuth login redirects in webviews
     webview.addEventListener('did-fail-load', (e) => {
       if (e.errorCode === -3) return; // ignore aborted navigations
     });
 
     webview.addEventListener('will-navigate', (e) => {
+      // Detect OAuth provider from URL
+      let provider = null;
+
       if (e.url.includes('accounts.google.com')) {
+        provider = 'google';
+      } else if (e.url.includes('login.microsoftonline.com')) {
+        provider = 'microsoft';
+      }
+
+      if (provider) {
         e.preventDefault(); // ✅ stop webview navigation
-        ipcRenderer.invoke('open-google-auth', option.id);
+        console.log(`[OAuth] Intercepted ${provider} login for ${option.id}`);
+        window.authAPI.openGoogleAuth(option.id);
       }
     });
 
     // ✅ Also catch new-window (popup) attempts
     webview.addEventListener('new-window', (e) => {
+      let provider = null;
+
       if (e.url.includes('accounts.google.com')) {
+        provider = 'google';
+      } else if (e.url.includes('login.microsoftonline.com')) {
+        provider = 'microsoft';
+      }
+
+      if (provider) {
         e.preventDefault();
-        ipcRenderer.invoke('open-google-auth', option.id);
+        console.log(`[OAuth] Intercepted ${provider} popup for ${option.id}`);
+        window.authAPI.openGoogleAuth(option.id);
       }
     });
-
-    // ✅ When auth done, reload the webview
-    ipcRenderer.on('auth-complete', (event, tabId) => {
-      if (tabId === option.id) {
-        console.log(`[AUTH-COMPLETE] Reloading webview: ${tabId}`);
-        webview.reload();
-      }
-    });
-
-    //    // Reset flag when auth completes so user can log in again later
-    // ipcRenderer.on('auth-complete', (event, tabId) => {
-    //   if (tabId === option.id) {
-    //     authIntercepted = false;
-    //     webview.reload();
-    //   }
-    // });
 
 
     // Add drag handle functionality
