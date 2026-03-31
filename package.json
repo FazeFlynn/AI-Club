@@ -1,20 +1,41 @@
 {
-  "name": "AI CLUB",
+  "name": "ai-club",
+  "productName": "AI Club",
   "version": "1.0.0",
-  "description": "AIL",
+  "description": "An app that allows you to use different AIs parallely with a single prompt.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --enable-logging"
+    "dev": "electron . --enable-logging",
+    "dist": "electron-builder --win --x64"
   },
   "keywords": [
     "electron",
     "webview",
     "browser"
   ],
-  "author": "",
+  "build": {
+    "appId": "com.fazeflynn.aiclub",
+    "win": {
+      "target": "portable",
+      "icon": "icons/icon.ico"
+    },
+    "portable": {
+      "artifactName": "AI Club.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "installerIcon": "icons/icon.ico",
+      "uninstallerIcon": "icons/icon.ico",
+      "uninstallDisplayName": "AI Club",
+      "artifactName": "AI Club Setup.exe"
+    }
+  },
+  "author": "Faze Flynn",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^40.7.0"
-  }
+    "electron": "^40.7.0",
+    "electron-packager": "^17.1.2"
+  },
+  "dependencies": {}
 }
