@@ -50,11 +50,6 @@ function attachOAuthInterceptor(webview, siteId) {
   webview.addEventListener("new-window", handleNavigation);
 }
 
-/**
- * Reload a specific webview with its associated URL
- * @param {HTMLElement} webviewElement - The webview element to reload
- * @param {string} url - The URL to reload
- */
 function reloadWebview(webviewElement, url) {
   if (webviewElement) {
     // webviewElement.src = "www.google.com";
@@ -162,6 +157,44 @@ const Options = [
 ];
 
 
+
+
+function waitForDomReady(webview) {
+  return new Promise(resolve => {
+    webview.addEventListener("dom-ready", resolve, { once: true });
+  });
+}
+
+
+// function waitForDomReady(webview) {
+//   return new Promise(resolve => {
+//     // ✅ If already loaded → resolve immediately
+//     if (!webview.isLoading()) {
+//       resolve();
+//       return;
+//     }
+
+//     webview.addEventListener("dom-ready", resolve, { once: true });
+//   });
+// }
+
+
+// function waitForDomReady(webview) {
+//   return new Promise(resolve => {
+//     // If already loaded and has a URL → safe to proceed
+//     if (webview.getURL() && !webview.isLoading()) {
+//       resolve();
+//       return;
+//     }
+
+//     const handler = () => {
+//       webview.removeEventListener("dom-ready", handler);
+//       resolve();
+//     };
+
+//     webview.addEventListener("dom-ready", handler);
+//   });
+// }
 
 const toggleInputs = {
 
@@ -296,53 +329,106 @@ const toggleInputs = {
   },
 
   copilotToggle: async (webview) => {
-    await waitForDomReady(webview);
+    console.log(`CAME IN COPILOT TOGGLE COMPOSER ba bal lb lab lb `)
+
+    console.log("isLoading:", webview.isLoading());
+    console.log("URL:", webview.getURL());
+    // await waitForDomReady(webview);
+
+
     // webview.openDevTools();
+    console.log(`CAME IN COPILOT TOGGLE COMPOSER after waitForDomReady`)
     webview.executeJavaScript(`
- (() => {
-  const existing = document.getElementById("hide-composer-style");
 
-  if (existing) {
-    // 🔓 SHOW (remove style)
-    existing.remove();
+
+(() => {
+  console.log('CAME IN TOGGLE COMPOSER copilot')
+  const STYLE_ID = "hide-composer-style";
+
+  const existingStyle = document.getElementById(STYLE_ID);
+
+  if (existingStyle) {
+    // 🔁 SHOW (remove style)
+    existingStyle.remove();
     console.log("Composer shown");
-    return;
+  } else {
+    // 🔒 HIDE (add style)
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = \`
+      [data-testid="composer-content"] {
+        position: fixed !important;
+        top: -10000px !important;
+        left: -10000px !important;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        overflow: hidden !important;
+        z-index: -9999 !important;
+      }
+    \`;
+    document.head.appendChild(style);
+    console.log("Composer hidden");
   }
-
-  // 🔒 HIDE (inject style)
-  const style = document.createElement("style");
-  style.id = "hide-composer-style";
-  style.textContent = \`
-    [data-testid="composer-content"] {
-      position: fixed !important;
-      top: -10000px !important;
-      left: -10000px !important;
-      width: 1px !important;
-      height: 1px !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-      overflow: hidden !important;
-      z-index: -9999 !important;
-    }
-  \`;
-
-  document.head.appendChild(style);
-  console.log("Composer hidden safely via CSS");
 })();
 
     `);
   },
 
 
+  deepseekToggle: async (webview) => {
+
+    webview.executeJavaScript(`
+(() => {
+  const ele = document
+    .querySelector('textarea[placeholder="Message DeepSeek"]')
+    ?.closest('div')
+    ?.parentElement
+    ?.parentElement;
+
+  if (!ele) {
+    console.log("Element not found");
+    return;
+  }
+
+  // Toggle class
+  ele.classList.toggle("hide-deepseek-composer");
+
+  // Inject style once
+  if (!document.getElementById("deepseek-toggle-style")) {
+    const style = document.createElement("style");
+    style.id = "deepseek-toggle-style";
+    style.textContent = \`
+      .hide-deepseek-composer {
+        position: fixed !important;
+        top: -10000px !important;
+        left: -10000px !important;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        overflow: hidden !important;
+        z-index: -9999 !important;
+      }
+    \`;
+    document.head.appendChild(style);
+  }
+
+  console.log(
+    ele.classList.contains("hide-deepseek-composer")
+      ? "Composer hidden"
+      : "Composer visible"
+  );
+})();
+
+    `)
+
+
+  }
+
 }
 
-
-
-function waitForDomReady(webview) {
-  return new Promise(resolve => {
-    webview.addEventListener("dom-ready", resolve, { once: true });
-  });
-}
 
 
 const WebviewReadyHandlers = {
@@ -352,6 +438,7 @@ const WebviewReadyHandlers = {
     // webview.openDevTools();
 
     webview.executeJavaScript(`
+      document.documentElement.style.filter = "contrast(1.1) saturate(1)";
       document.querySelector('form[data-type="unified-composer"]')?.style.setProperty('display','none','important');
     `);
   },
@@ -399,12 +486,48 @@ const WebviewReadyHandlers = {
 
   copilotReady: async (webview) => {
     await waitForDomReady(webview);
-    webview.openDevTools();
+    // webview.openDevTools();
     webview.executeJavaScript(`
         // document.querySelector('[data-testid="composer-content"]')?.style.setProperty('display','none');
 
-          (() => {
+//          (() => {
+//    const style = document.createElement("style");
+//    style.textContent = \`
+//      [data-testid="composer-content"] {
+//        position: fixed !important;
+//        top: -10000px !important;
+//        left: -10000px !important;
+//        width: 1px !important;
+//        height: 1px !important;
+//        opacity: 0 !important;
+//        pointer-events: none !important;
+//        overflow: hidden !important;
+//        z-index: -9999 !important;
+//      }
+//    \`;
+//    document.head.appendChild(style);
+//    console.log("Composer hidden safely via CSS");
+//  })();
+
+
+
+// document.documentElement.style.filter = "contrast(1.5)";
+
+document.documentElement.style.filter = "contrast(1.1) saturate(.9)";
+
+(() => {
+  const STYLE_ID = "hide-composer-style";
+
+  const existingStyle = document.getElementById(STYLE_ID);
+
+  if (existingStyle) {
+    // 🔁 SHOW (remove style)
+    existingStyle.remove();
+    console.log("Composer shown");
+  } else {
+    // 🔒 HIDE (add style)
     const style = document.createElement("style");
+    style.id = STYLE_ID;
     style.textContent = \`
       [data-testid="composer-content"] {
         position: fixed !important;
@@ -419,8 +542,9 @@ const WebviewReadyHandlers = {
       }
     \`;
     document.head.appendChild(style);
-    console.log("Composer hidden safely via CSS");
-  })();
+    console.log("Composer hidden");
+  }
+})();
     `);
   },
 
@@ -497,19 +621,63 @@ const WebviewReadyHandlers = {
 
   deepseekReady: async (webview) => {
     await waitForDomReady(webview);
+    // webview.openDevTools();
     await webview.executeJavaScript(`
-        document
-            .querySelector('textarea[placeholder="Message DeepSeek"]')
-            ?.closest('div')
-            ?.parentElement
-            ?.parentElement
-            ?.style.setProperty('display','none','important');
+//        document
+//            .querySelector('textarea[placeholder="Message DeepSeek"]')
+//            ?.closest('div')
+//            ?.parentElement
+//            ?.parentElement
+//            ?.style.setProperty('display','none','important');
+
+
+(() => {
+  const el = document
+    .querySelector('textarea[placeholder="Message DeepSeek"]')
+    ?.closest('div')
+    ?.parentElement
+    ?.parentElement;
+
+  if (!el) {
+    console.log("Element not found");
+    return;
+  }
+
+  // Toggle class
+  el.classList.toggle("hide-deepseek-composer");
+
+  // Inject style once
+  if (!document.getElementById("deepseek-toggle-style")) {
+    const style = document.createElement("style");
+    style.id = "deepseek-toggle-style";
+    style.textContent = \`
+      .hide-deepseek-composer {
+        position: fixed !important;
+        top: -10000px !important;
+        left: -10000px !important;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        overflow: hidden !important;
+        z-index: -9999 !important;
+      }
+    \`;
+    document.head.appendChild(style);
+  }
+
+  console.log(
+    el.classList.contains("hide-deepseek-composer")
+      ? "Composer hidden"
+      : "Composer visible"
+  );
+})();
     `);
   },
 
   metaReady: async (webview) => {
     console.log(`META META METAMETA`)
-    // await waitForDomReady(webview);
+    await waitForDomReady(webview);
     // webview.openDevTools();
     await webview.executeJavaScript(`
         // document.querySelector('[data-pagelet="KadabraPrivateComposer"]')?.style.setProperty('display', 'none', 'important');
@@ -699,24 +867,6 @@ el.dispatchEvent(new Event("input", { bubbles: true }));
     `);
   },
 
-
-
-  // const el = document.querySelector('#ask-input');
-  // if (!el) return;
-
-  // el.focus();
-
-  // // Clear existing content
-  // document.execCommand('selectAll', false, null);
-  // document.execCommand('delete', false, null);
-
-  // // Insert text like real user typing
-  // document.execCommand('insertText', false, ${prompt});
-
-  // setTimout(() => {
-  //   document.querySelector('button[aria-label="Submit"]')?.click();
-  //   },50)
-
   perplexitySubmit: async (webview, prompt) => {
     webview.executeJavaScript(`
 
@@ -843,7 +993,7 @@ document
 document.execCommand('selectAll'),
 document.execCommand('insertText',false, ${prompt}));
 
- setTimout(() => {
+ setTimeout(() => {
 document.querySelector('[data-testid="prompt-form-send-button"]')?.click();
  },50)
 
@@ -851,25 +1001,79 @@ document.querySelector('[data-testid="prompt-form-send-button"]')?.click();
   },
 
   deepseekSubmit: async (webview, prompt) => {
+    console.log(`DEEPSEEK SUBMIT HANDLER, PROMPT: ${prompt}`)
     await webview.executeJavaScript(`
 
-          const el = document.querySelector('textarea[placeholder="Message DeepSeek"]');
-  if (!el) return;
+
+(() => {
+  const elem = document.querySelector('textarea[placeholder="Message DeepSeek"]');
+
+
+  if (!elem) return;
 
   const setter = Object.getOwnPropertyDescriptor(
     HTMLTextAreaElement.prototype,
     'value'
   ).set;
 
-  setter.call(el, ${prompt});
-  el.dispatchEvent(new Event('input', { bubbles: true }));
+  setter.call(elem, ${JSON.stringify(prompt)});
+  elem.dispatchEvent(new Event('input', { bubbles: true }));
 
-   setTimout(() => {
-  document
-  .querySelector('svg path[d^="M8.3125 0.981587"]')
-  ?.closest('[role="button"]')
-  ?.click();
-   },50)
+  setTimeout(() => {
+    document
+      .querySelector('svg path[d^="M8.3125 0.981587"]')
+      ?.closest('[role="button"]')
+      ?.click();
+  }, 50);
+})();
+
+
+setTimeout(async () => {
+
+  (() => {
+  const el = document
+    .querySelector('textarea[placeholder="Message DeepSeek"]')
+    ?.closest('div')
+    ?.parentElement
+    ?.parentElement;
+
+  if (!el) {
+    console.log("Element not found");
+    return;
+  }
+
+  // Toggle class
+  el.classList.toggle("hide-deepseek-composer");
+
+  // Inject style once
+  if (!document.getElementById("deepseek-toggle-style")) {
+    const style = document.createElement("style");
+    style.id = "deepseek-toggle-style";
+    style.textContent = \`
+      .hide-deepseek-composer {
+        position: fixed !important;
+        top: -10000px !important;
+        left: -10000px !important;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        overflow: hidden !important;
+        z-index: -9999 !important;
+      }
+    \`;
+    document.head.appendChild(style);
+  }
+
+  console.log(
+    el.classList.contains("hide-deepseek-composer")
+      ? "Composer hidden"
+      : "Composer visible"
+  );
+})();
+
+},200);
+
            
     `);
   },
@@ -938,6 +1142,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const sendBtn = document.querySelector('#send-btn001');
   console.log(`The button is: ${sendBtn}`);
   const aiInput = document.querySelector('#ai-input');
+
+  const someButton = document.querySelector('#some-btn');
+  someButton.addEventListener('click', () => {
+    console.log('Some button was clicked!');
+  });
 
 
   const inputFunc = () => {
@@ -1399,6 +1608,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (toggleHandler) {
         toggleHandler(webview);
+        // console.log(`Toggled inputs for ${option.name}`);
+        // console.log(`The webview is: ${JSON.stringify(webview,null,2)}`);
+        // console.log(`The toggleHandler is: ${toggleHandler}`);
       }
       // toggleInputs.geminiInputToggle(webview);
     });
@@ -1407,17 +1619,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   }
 
-
+  //socc
   selectOption("chatgpt");
   selectOption("gemini");
-  selectOption("claude");
+  // selectOption("claude");
+  selectOption("copilot");
   selectOption("perplexity");
-  // selectOption("copilot");
+  selectOption("deepseek");
   // selectOption("v0");
   // selectOption("gcopilot");
-  // selectOption("meta"/);
+  // selectOption("meta");
   // selectOption("grok");
-  // selectOption("deepseek");c
 
   updateWebviewWidths();
 

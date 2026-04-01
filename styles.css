@@ -13,6 +13,41 @@ body {
 
 }
 
+#title-bar {
+    height: 25px;
+    background-color: #2f3241;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* This makes the whole bar draggable */
+    -webkit-app-region: drag;
+}
+
+#title {
+    /* background-color: red; */
+    font-size: 12px;
+    color: #bbbbbb;
+    /* color: #a294aa; */
+    padding-left: 20px;
+}
+
+#controls {
+    margin-right: 160px;
+}
+
+#controls button {
+    /* IMPORTANT: You MUST set buttons to 'no-drag' */
+    /* Otherwise, you can't click them! */
+    -webkit-app-region: no-drag;
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    background: transparent;
+    /* font-size: 8px; */
+
+
+}
+
 .controls {
     display: flex;
     gap: 10px;
@@ -47,7 +82,7 @@ body {
 
 #container {
     display: flex;
-    height: 100vh;
+    height: 97vh;
     /* Subtract controls height */
     position: relative;
     background: #1e1e1e;
@@ -119,7 +154,7 @@ webview {
 
 .dragger:hover {
     background: #a261db;
-     width: 8px;
+    width: 8px;
     cursor: col-resize;
 }
 
@@ -377,19 +412,19 @@ body.dragging {
 }
 
 .webview-placeholder {
-  background: rgba(174, 97, 237, 0.2);
-  border: 2px dashed #ae61ed;
-  box-sizing: border-box;
+    background: rgba(174, 97, 237, 0.2);
+    border: 2px dashed #ae61ed;
+    box-sizing: border-box;
 }
 
 .dragging-webview {
-  opacity: 0.8;
-  cursor: grabbing !important;
-  pointer-events: none; /* Prevent webview from interfering */
+    opacity: 0.8;
+    cursor: grabbing !important;
+    pointer-events: none;
+    /* Prevent webview from interfering */
 }
 
 .webview-wrapper {
-  position: relative; /* Make sure it can be positioned */
+    position: relative;
+    /* Make sure it can be positioned */
 }
-
-

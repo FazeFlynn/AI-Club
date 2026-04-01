@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"> -->
 
@@ -9,7 +10,18 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
 </head>
+
 <body>
+
+
+    <div id="title-bar">
+        <div id="title">AI Club</div>
+        <div id="controls">
+            <!-- <button id="minimize-btn">🍪</button> -->
+            <button id="some-btn">🍪</button>
+        </div>
+    </div>
+
     <!-- <div class="controls">
         <input type="text" id="urlInput" placeholder="Enter URL (e.g., https://example.com)">
         <button id="addWebview">Add Webview</button>
@@ -21,14 +33,15 @@
 
 
     <!-- <div id="chat-container"> -->
-        
-        <div class="chat-input">
-            <button id="grabber">::</button>
-            <textarea id="ai-input" placeholder="Message the AIs…" rows="1"></textarea>
-            <button id="send-btn001">🍪</button>
-        </div>
+
+    <div class="chat-input">
+        <button id="grabber">::</button>
+        <textarea id="ai-input" placeholder="Message the AIs…" rows="1"></textarea>
+        <button id="send-btn001">🍪</button>
+    </div>
     <!-- </div> -->
 
     <script src="./renderer.js"></script>
 </body>
+
 </html>

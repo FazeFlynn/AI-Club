@@ -46,6 +46,13 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1400,
         height: 900,
+        frame: false, 
+        titleBarStyle: 'hidden', 
+        titleBarOverlay: {
+            color: '#2f324100',      // Matches your title bar bg
+            symbolColor: '#ffffff', // Color of the minimize/close icons
+            height: 25              // Match the title bar height in CSS
+        },
         webPreferences: {
             nodeIntegration: true,
             // contextIsolation: false,
@@ -243,7 +250,7 @@ ipcMain.handle('open-google-auth', (event, tabId) => {
                 sendMessage: ()=>{},
                 onMessage: { addListener: ()=>{}, removeListener: ()=>{} },
             };
-        `).catch(() => {});
+        `).catch(() => { });
     });
 
     authWindow.webContents.on('did-navigate', (e, url) => {
