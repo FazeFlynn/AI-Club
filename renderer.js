@@ -1652,6 +1652,11 @@ document.addEventListener('DOMContentLoaded', () => {
     reorderState.draggedIndex = index;
     reorderState.pointerId = e.pointerId;
 
+    // Save current widths of all webviews before reordering
+    webviews.forEach(({ element }) => {
+      element.dataset.savedWidth = element.getBoundingClientRect().width + 'px';
+    });
+
     const rect = wrapper.getBoundingClientRect();
     reorderState.offsetX = e.clientX - rect.left;
     reorderState.offsetY = e.clientY - rect.top;
@@ -1748,7 +1753,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear visual dragging styles
     requestAnimationFrame(() => {
       wrapper.classList.remove('dragging-webview');
-      wrapper.style.width = '';
       wrapper.style.height = '';
       wrapper.style.left = '';
       wrapper.style.top = '';
@@ -1809,13 +1813,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return orderA - orderB;
       });
 
-    // Insert draggers between wrappers, each with an explicit order value
-    for (let i = 0; i < sortedWrappers.length - 1; i++) {
-      const dragger = createDragger();
-      const orderValue = i + 0.5;  // Draggers go between integers: 0.5, 1.5, 2.5, etc.
-      dragger.style.order = orderValue;
-      sortedWrappers[i].insertAdjacentElement('afterend', dragger);
-    }
+    // Reassign order values and insert draggers with explicit left/right references.
+    // Do NOT move wrappers in the DOM to avoid webview reloads.
+    sortedWrappers.forEach((wrapper, i) => {
+      wrapper.style.order = i * 2;
+
+      if (i < sortedWrappers.length - 1) {
+        const dragger = createDragger(sortedWrappers[i], sortedWrappers[i + 1]);
+        dragger.style.order = i * 2 + 1;
+        container.appendChild(dragger);
+      }
+    });
   }
 
 
@@ -1850,17 +1858,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== DRAGGER RESIZE FUNCTIONALITY =====
 
-  function createDragger() {
+  function createDragger(leftRef, rightRef) {
     const dragger = document.createElement('div');
     dragger.className = 'dragger';
+
+    // Store explicit references to adjacent webview wrappers
+    dragger._leftWebview = leftRef || null;
+    dragger._rightWebview = rightRef || null;
 
     // Use pointerdown to start dragging immediately
     dragger.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       e.stopPropagation();
 
-      const leftWebview = dragger.previousElementSibling;
-      const rightWebview = dragger.nextElementSibling;
+      const leftWebview = dragger._leftWebview || dragger.previousElementSibling;
+      const rightWebview = dragger._rightWebview || dragger.nextElementSibling;
 
       if (!leftWebview || !rightWebview) return;
       if (!leftWebview.classList.contains('webview-wrapper')) return;
