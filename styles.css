@@ -23,29 +23,45 @@ body {
     -webkit-app-region: drag;
 }
 
+#logo {
+    width: 16px;
+    height: 16px;
+    margin-left: 10px;
+}
+
 #title {
     /* background-color: red; */
     font-size: 12px;
     color: #bbbbbb;
     /* color: #a294aa; */
-    padding-left: 20px;
+    padding-left: 6px;
 }
 
 #controls {
-    margin-right: 160px;
+    margin-right: 150px;
 }
 
 #controls button {
     /* IMPORTANT: You MUST set buttons to 'no-drag' */
     /* Otherwise, you can't click them! */
     -webkit-app-region: no-drag;
+
+}
+
+#some-btn {
+    background-color: #4a335e;
+    border: 1px solid #9351c9;
+    color: #fff;
+    border-radius: 10px;
+    padding: 1px 10px;
     cursor: pointer;
-    background-color: transparent;
-    border: none;
-    background: transparent;
-    /* font-size: 8px; */
+    font-size: 10px;
+    font-family: 'Outfit', sans-serif;
 
+}
 
+#some-btn:hover {
+    background-color: #9351c9;
 }
 
 .controls {
@@ -73,7 +89,7 @@ body {
     border-radius: 6px;
     color: #fff;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .controls button:hover {
@@ -427,4 +443,118 @@ body.dragging {
 .webview-wrapper {
     position: relative;
     /* Make sure it can be positioned */
+}
+
+/* AI Panel */
+.ai-panel {
+    position: fixed;
+    top: 30px;
+    right: 10px;
+    width: 240px;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: #2a2a3d;
+    border: 1px solid #ae61ed;
+    border-radius: 10px;
+    z-index: 2000;
+    padding: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.ai-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #444;
+}
+
+.ai-panel-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #ccc;
+}
+
+.ai-panel-close-btn {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.ai-panel-close-btn:hover {
+    color: #fff;
+}
+
+.ai-panel-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 4px;
+    border-radius: 6px;
+}
+
+.ai-panel-row:hover {
+    background: #363650;
+}
+
+.ai-panel-name {
+    font-size: 12px;
+    color: #bbb;
+}
+
+.ai-panel-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.ai-panel-btn {
+    background: #ae61ed3b;
+    border: 1px solid #ae61ed;
+    color: #fff;
+    border-radius: 25px;
+    padding: 1px 10px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'Outfit', sans-serif;
+    transition: background 0.2s;
+}
+
+.ai-panel-btn:hover {
+    background: #ae61ed;
+}
+
+.ai-panel-btn-off {
+    background: #333;
+    border-color: #666;
+}
+
+.ai-panel-btn-off:hover {
+    background: #555;
+}
+
+.ai-panel-btn-add {
+    background: transparent;
+    border-color: #5a5a7a;
+    color: #888;
+}
+
+.ai-panel-btn-add:hover {
+    background: #ae61ed3b;
+    border-color: #ae61ed;
+    color: #fff;
+}
+
+.webview-header .hide-btn {
+    background: #d32f2f3b;
+    border-color: #d32f2f;
+}
+
+.webview-header .hide-btn:hover {
+    background: #d32f2f;
 }

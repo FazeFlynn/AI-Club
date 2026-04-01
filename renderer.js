@@ -108,34 +108,8 @@ const Options = [
     onToggle: "perplexityToggle",
     listening: true,
     added: false
-  }, {
-    id: "grok",
-    name: "Grok (xAI)",
-    url: "https://grok.com/",
-    onWebviewReady: "grokReady",
-    onSubmit: "grokSubmit",
-    onToggle: "grokToggle",
-    listening: true,
-    added: false
-  }, {
-    id: "gcopilot",
-    name: "GitHub Copilot",
-    url: "https://github.com/copilot/",
-    onWebviewReady: "gCopilotReady",
-    onSubmit: "gCopilotSubmit",
-    onToggle: "gCopilotToggle",
-    listening: true,
-    added: false
-  }, {
-    id: "v0",
-    name: "Vercel V0",
-    url: "https://v0.app/",
-    onWebviewReady: "v0Ready",
-    onSubmit: "v0Submit",
-    onToggle: "v0Toggle",
-    listening: true,
-    added: false
-  }, {
+  },
+  {
     id: "deepseek",
     name: "Deepseek",
     url: "https://chat.deepseek.com/",
@@ -144,16 +118,50 @@ const Options = [
     onToggle: "deepseekToggle",
     listening: true,
     added: false
-  }, {
-    id: "meta",
-    name: "Meta AI",
-    url: "https://www.meta.ai/",
-    onWebviewReady: "metaReady",
-    onSubmit: "metaSubmit",
-    onToggle: "metaToggle",
-    listening: true,
-    added: false
-  }
+  },
+
+  // {
+  //   id: "grok",
+  //   name: "Grok (xAI)",
+  //   url: "https://grok.com/",
+  //   onWebviewReady: "grokReady",
+  //   onSubmit: "grokSubmit",
+  //   onToggle: "grokToggle",
+  //   listening: true,
+  //   added: false
+  // }, 
+  // {
+  //   id: "gcopilot",
+  //   name: "GitHub Copilot",
+  //   url: "https://github.com/copilot/",
+  //   onWebviewReady: "gCopilotReady",
+  //   onSubmit: "gCopilotSubmit",
+  //   onToggle: "gCopilotToggle",
+  //   listening: true,
+  //   added: false
+  // },
+  //  {
+  //   id: "v0",
+  //   name: "Vercel V0",
+  //   url: "https://v0.app/",
+  //   onWebviewReady: "v0Ready",
+  //   onSubmit: "v0Submit",
+  //   onToggle: "v0Toggle",
+  //   listening: true,
+  //   added: false
+  // }, 
+  //  {
+  //   id: "meta",
+  //   name: "Meta AI",
+  //   url: "https://www.meta.ai/",
+  //   onWebviewReady: "metaReady",
+  //   onSubmit: "metaSubmit",
+  //   onToggle: "metaToggle",
+  //   listening: true,
+  //   added: false
+  // }
+
+
 ];
 
 
@@ -1144,9 +1152,90 @@ document.addEventListener('DOMContentLoaded', () => {
   const aiInput = document.querySelector('#ai-input');
 
   const someButton = document.querySelector('#some-btn');
+
+  // Create AI panel
+  const aiPanel = document.createElement('div');
+  aiPanel.id = 'ai-panel';
+  aiPanel.className = 'ai-panel';
+  aiPanel.style.display = 'none';
+  document.body.appendChild(aiPanel);
+
+  function renderAIPanel() {
+    aiPanel.innerHTML = '';
+
+    const header = document.createElement('div');
+    header.className = 'ai-panel-header';
+
+    const title = document.createElement('div');
+    title.className = 'ai-panel-title';
+    title.textContent = 'AI Models';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'ai-panel-close-btn';
+    closeBtn.textContent = '✕';
+    closeBtn.addEventListener('click', () => {
+      aiPanel.style.display = 'none';
+    });
+
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    aiPanel.appendChild(header);
+
+    Options.forEach(option => {
+      const row = document.createElement('div');
+      row.className = 'ai-panel-row';
+
+      const name = document.createElement('span');
+      name.className = 'ai-panel-name';
+      name.textContent = option.name;
+
+      const controls = document.createElement('div');
+      controls.className = 'ai-panel-controls';
+
+      if (option.added) {
+        const wvEntry = webviews.find(w => w.id === option.id);
+        const isHidden = wvEntry && wvEntry.element.dataset.hidden === 'true';
+
+        const hideToggle = document.createElement('button');
+        hideToggle.className = 'ai-panel-btn' + (isHidden ? ' ai-panel-btn-off' : '');
+        hideToggle.textContent = isHidden ? 'show' : 'hide';
+        hideToggle.addEventListener('click', () => {
+          if (isHidden) {
+            showWebview(option.id);
+          } else {
+            hideWebview(option.id);
+          }
+          renderAIPanel();
+        });
+        controls.appendChild(hideToggle);
+      } else {
+        const addBtn = document.createElement('button');
+        addBtn.className = 'ai-panel-btn ai-panel-btn-add';
+        addBtn.textContent = 'add';
+        addBtn.addEventListener('click', () => {
+          selectOption(option.id);
+          updateWebviewWidths();
+          renderAIPanel();
+        });
+        controls.appendChild(addBtn);
+      }
+
+      row.appendChild(name);
+      row.appendChild(controls);
+      aiPanel.appendChild(row);
+    });
+  }
+
   someButton.addEventListener('click', () => {
-    console.log('Some button was clicked!');
+    if (aiPanel.style.display === 'none') {
+      renderAIPanel();
+      aiPanel.style.display = 'block';
+    } else {
+      aiPanel.style.display = 'none';
+    }
   });
+
+
 
 
   const inputFunc = () => {
@@ -1424,6 +1513,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reload
             </button>
             ${true ? `<button id="${option.id}-listening" class="listening-btn">listening</button>` : ''}
+            <button id="${option.id}-hide" class="listening-btn hide-btn">hide</button>
         `;
 
     lucide.createIcons();
@@ -1570,6 +1660,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    const hideBtn = header.querySelector(`#${option.id}-hide`);
+    hideBtn.addEventListener('click', () => {
+      hideWebview(option.id);
+    });
+
 
 
     if (true) {
@@ -1622,16 +1717,69 @@ document.addEventListener('DOMContentLoaded', () => {
   //socc
   selectOption("chatgpt");
   selectOption("gemini");
-  // selectOption("claude");
+  selectOption("claude");
   selectOption("copilot");
-  selectOption("perplexity");
-  selectOption("deepseek");
+  // selectOption("perplexity");
+  // selectOption("deepseek");
+
   // selectOption("v0");
   // selectOption("gcopilot");
   // selectOption("meta");
   // selectOption("grok");
 
   updateWebviewWidths();
+
+
+  function hideWebview(optionId) {
+    const wvEntry = webviews.find(w => w.id === optionId);
+    if (!wvEntry) return;
+
+    const option = Options.find(o => o.id === optionId);
+    if (option) {
+      option.listening = false;
+      const listeningBtn = wvEntry.element.querySelector(`#${optionId}-listening`);
+      if (listeningBtn) listeningBtn.textContent = 'not listening';
+    }
+
+    wvEntry.element.dataset.hidden = 'true';
+    wvEntry.element.style.display = 'none';
+
+    // Hide adjacent dragger
+    const prevSib = wvEntry.element.previousElementSibling;
+    const nextSib = wvEntry.element.nextElementSibling;
+    if (nextSib && nextSib.classList.contains('dragger')) {
+      nextSib.style.display = 'none';
+      nextSib.dataset.hiddenFor = optionId;
+    } else if (prevSib && prevSib.classList.contains('dragger')) {
+      prevSib.style.display = 'none';
+      prevSib.dataset.hiddenFor = optionId;
+    }
+
+    console.log(`Webview hidden: ${optionId}`);
+  }
+
+  function showWebview(optionId) {
+    const wvEntry = webviews.find(w => w.id === optionId);
+    if (!wvEntry) return;
+
+    const option = Options.find(o => o.id === optionId);
+    if (option) {
+      option.listening = true;
+      const listeningBtn = wvEntry.element.querySelector(`#${optionId}-listening`);
+      if (listeningBtn) listeningBtn.textContent = 'listening';
+    }
+
+    delete wvEntry.element.dataset.hidden;
+    wvEntry.element.style.display = '';
+
+    // Show dragger that was hidden for this webview
+    container.querySelectorAll(`.dragger[data-hidden-for="${optionId}"]`).forEach(d => {
+      d.style.display = '';
+      delete d.dataset.hiddenFor;
+    });
+
+    console.log(`Webview shown: ${optionId}`);
+  }
 
 
   function startReorderDrag(e, wrapper) {
