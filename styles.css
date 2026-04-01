@@ -64,6 +64,22 @@ body {
     background-color: #9351c9;
 }
 
+#reset-width-btn {
+    background-color: #727437;
+    border: 1px solid #c9bd51;
+    color: #fff;
+    border-radius: 10px;
+    padding: 1px 10px;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: 'Outfit', sans-serif;
+    margin-right: 5px;
+}
+
+#reset-width-btn:hover {
+    background-color: #c9bd51;
+}
+
 .controls {
     display: flex;
     gap: 10px;

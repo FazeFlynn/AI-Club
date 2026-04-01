@@ -46,43 +46,39 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1400,
         height: 900,
-        frame: false, 
-        titleBarStyle: 'hidden', 
+
+        show: false,
+
+        frame: false,
+        titleBarStyle: 'hidden',
         titleBarOverlay: {
-            color: '#2f324100',      // Matches your title bar bg
-            symbolColor: '#ffffff', // Color of the minimize/close icons
-            height: 25              // Match the title bar height in CSS
+            color: '#2f324100',
+            symbolColor: '#ffffff',
+            height: 25
         },
+
         webPreferences: {
             nodeIntegration: true,
-            // contextIsolation: false,
+            contextIsolation: false,
             webviewTag: true,
             allowRunningInsecureContent: false,
             webSecurity: true,
-            // preload: path.join(__dirname, 'preload.js'),
-            preload: path.join(__dirname, 'auth-preload.js'),
-            contextIsolation: false   // IMPORTANT
+            preload: path.join(__dirname, 'auth-preload.js')
         },
+
         icon: path.join(__dirname, 'icon.png'),
         autoHideMenuBar: true
     });
 
     mainWindow.setMenuBarVisibility(false);
 
-    // mainWindow.webContents.setUserAgent(
-    //     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    // )
-
-    console.log(`[MAIN] Setting main window User-Agent to: ${UA}`);
-
     mainWindow.webContents.setUserAgent(UA);
 
     mainWindow.loadFile('index.html');
 
-    // Open DevTools in development
-    // mainWindow.webContents.openDevTools();
-
-
+    mainWindow.once('ready-to-show', () => {
+        mainWindow.show();
+    });
 
     mainWindow.on('closed', function () {
         mainWindow = null;

@@ -1235,6 +1235,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  const resetWidthBtn = document.querySelector('#reset-width-btn');
+  resetWidthBtn.addEventListener('click', () => {
+    updateWebviewWidths();
+  });
+
 
 
 
