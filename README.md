@@ -1,4 +1,4 @@
-# AIL
+# AI Club
 
 A desktop application that allows you to browse two websites side-by-side with JavaScript injection capabilities. Built with Electron, this app can load ANY website including those that block iframes (like ChatGPT, Claude, Google, etc.).
 
