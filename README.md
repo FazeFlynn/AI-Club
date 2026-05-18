@@ -167,16 +167,3 @@ For issues or questions, please check:
 - Electron documentation: https://www.electronjs.org/docs
 - Webview API: https://www.electronjs.org/docs/latest/api/webview-tag
 
-# Heading 1
-## Heading 2
-### Heading 3
-
-- Item 1
-- Item 2
-- Item 3
-
-Here is `inline code` example.
-
-```js
-console.log("Hello world");
-```
